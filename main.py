@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from pdf_viewer import PDFViewer
 from merge_dialog import MergeDialog
+from signature_dialog import SignatureDialog, insert_signature_image
+from PyQt6.QtGui import QCursor
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -48,9 +50,42 @@ class MainWindow(QMainWindow):
         # Connections
         self.btn_open.clicked.connect(self.open_pdf)
         self.btn_merge.clicked.connect(self.open_merge_dialog)
+        self.btn_sign.clicked.connect(self.open_signature_dialog)
+
+        self.pending_signature_path = None
+        self.canvas.mousePressEvent = self.canvas_clicked
         self.btn_prev.clicked.connect(self.prev_page)
         self.btn_next.clicked.connect(self.next_page)
 
+
+
+    def open_signature_dialog(self):
+        if not self.viewer.doc:
+            QMessageBox.warning(self, "Warning", "Please open a PDF first.")
+            return
+            
+        dialog = SignatureDialog(self)
+        if dialog.exec():
+            self.pending_signature_path = dialog.get_signature_image_path()
+            self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
+            
+    def canvas_clicked(self, event):
+        if self.pending_signature_path and self.viewer.doc:
+            # We need coordinates. Since QImage is scaled, we do a naive placement for now.
+            x = event.position().x()
+            y = event.position().y()
+            
+            try:
+                insert_signature_image(self.viewer.file_path, self.pending_signature_path, self.viewer.current_page, (x, y))
+                self.viewer.load_document(self.viewer.file_path)
+                self.viewer.current_page = self.viewer.current_page # keep same page
+                self.update_canvas()
+                QMessageBox.information(self, "Success", "Signature added!")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to sign:\n{str(e)}")
+            finally:
+                self.pending_signature_path = None
+                self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
     def open_merge_dialog(self):
         dialog = MergeDialog(self)
