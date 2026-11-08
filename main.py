@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from pdf_viewer import PDFViewer
+from merge_dialog import MergeDialog
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -46,8 +47,14 @@ class MainWindow(QMainWindow):
 
         # Connections
         self.btn_open.clicked.connect(self.open_pdf)
+        self.btn_merge.clicked.connect(self.open_merge_dialog)
         self.btn_prev.clicked.connect(self.prev_page)
         self.btn_next.clicked.connect(self.next_page)
+
+
+    def open_merge_dialog(self):
+        dialog = MergeDialog(self)
+        dialog.exec()
 
     def open_pdf(self):
         filepath, _ = QFileDialog.getOpenFileName(self, "Open PDF", "", "PDF Files (*.pdf)")
