@@ -25,10 +25,12 @@ class MainWindow(QMainWindow):
         # Toolbar
         toolbar_layout = QHBoxLayout()
         self.btn_open = QPushButton("[Open PDF]")
+        self.btn_save = QPushButton("[Save PDF]")
         self.btn_merge = QPushButton("[Merge PDFs]")
         self.btn_sign = QPushButton("[Sign PDF]")
         self.btn_print = QPushButton("[Print PDF]")
         toolbar_layout.addWidget(self.btn_open)
+        toolbar_layout.addWidget(self.btn_save)
         toolbar_layout.addWidget(self.btn_merge)
         toolbar_layout.addWidget(self.btn_sign)
         toolbar_layout.addWidget(self.btn_print)
@@ -51,6 +53,7 @@ class MainWindow(QMainWindow):
 
         # Connections
         self.btn_open.clicked.connect(self.open_pdf)
+        self.btn_save.clicked.connect(self.save_pdf)
         self.btn_merge.clicked.connect(self.open_merge_dialog)
         self.btn_sign.clicked.connect(self.open_signature_dialog)
         self.btn_print.clicked.connect(self.print_pdf)
@@ -152,6 +155,19 @@ class MainWindow(QMainWindow):
                 self.update_canvas()
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to open PDF:\n{str(e)}")
+
+    def save_pdf(self):
+        if not self.viewer.doc:
+            QMessageBox.warning(self, "Warning", "Please open a PDF first.")
+            return
+            
+        filepath, _ = QFileDialog.getSaveFileName(self, "Save PDF", "", "PDF Files (*.pdf)")
+        if filepath:
+            try:
+                self.viewer.save_document(filepath)
+                QMessageBox.information(self, "Success", "PDF saved successfully!")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save PDF:\n{str(e)}")
 
     def update_canvas(self):
         if self.viewer.doc:

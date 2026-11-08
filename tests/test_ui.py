@@ -9,3 +9,4 @@ def test_main_window_loads(qtbot):
     # Check for presence of required buttons by text
     buttons = [btn.text() for btn in window.findChildren(QPushButton)]
     assert "[Open PDF]" in buttons
+    assert "[Save PDF]" in buttons

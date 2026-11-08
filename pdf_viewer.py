@@ -28,6 +28,10 @@ class PDFViewer:
             self.doc.close()
             self.doc = None
 
+    def save_document(self, output_filepath):
+        if self.doc:
+            self.doc.save(output_filepath)
+
     def render_page_for_print(self, page_index, dpi=300):
         if not self.doc or page_index < 0 or page_index >= self.doc.page_count:
             return None
