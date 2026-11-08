@@ -1,5 +1,6 @@
 import sys
 from PyQt6.QtWidgets import (
+    QDialog,
     QApplication, QMainWindow, QWidget, QVBoxLayout, 
     QHBoxLayout, QPushButton, QLabel, QFileDialog, QMessageBox
 )
@@ -7,7 +8,8 @@ from PyQt6.QtCore import Qt
 from pdf_viewer import PDFViewer
 from merge_dialog import MergeDialog
 from signature_dialog import SignatureDialog, insert_signature_image
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QCursor, QPainter
+from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -51,6 +53,7 @@ class MainWindow(QMainWindow):
         self.btn_open.clicked.connect(self.open_pdf)
         self.btn_merge.clicked.connect(self.open_merge_dialog)
         self.btn_sign.clicked.connect(self.open_signature_dialog)
+        self.btn_print.clicked.connect(self.print_pdf)
 
         self.pending_signature_path = None
         self.canvas.mousePressEvent = self.canvas_clicked
@@ -69,6 +72,40 @@ class MainWindow(QMainWindow):
             self.pending_signature_path = dialog.get_signature_image_path()
             self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
             
+
+    def print_pdf(self):
+        if not self.viewer.doc:
+            QMessageBox.warning(self, "Warning", "Please open a PDF first.")
+            return
+
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        dialog = QPrintDialog(printer, self)
+        
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            painter = QPainter(printer)
+            page_count = self.viewer.get_page_count()
+            
+            for i in range(page_count):
+                if i > 0:
+                    printer.newPage()
+                
+                # Render page
+                pixmap = self.viewer.render_page(i)
+                if pixmap:
+                    image = pixmap.toImage()
+                    
+                    # Calculate scaling
+                    rect = painter.viewport()
+                    size = image.size()
+                    size.scale(rect.size(), Qt.AspectRatioMode.KeepAspectRatio)
+                    painter.setViewport(rect.x(), rect.y(), size.width(), size.height())
+                    painter.setWindow(image.rect())
+                    
+                    painter.drawImage(0, 0, image)
+                    
+            painter.end()
+            QMessageBox.information(self, "Success", "Document sent to printer!")
+
     def canvas_clicked(self, event):
         if self.pending_signature_path and self.viewer.doc:
             # We need coordinates. Since QImage is scaled, we do a naive placement for now.
