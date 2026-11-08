@@ -59,6 +59,7 @@ class SignatureDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Draw Signature")
+        self.selected_image_path = None
         
         layout = QVBoxLayout(self)
         
@@ -67,16 +68,28 @@ class SignatureDialog(QDialog):
         
         btn_layout = QHBoxLayout()
         self.btn_clear = QPushButton("[Clear]")
+        self.btn_image = QPushButton("[Select Image]")
         self.btn_accept = QPushButton("[Accept]")
         
         btn_layout.addWidget(self.btn_clear)
+        btn_layout.addWidget(self.btn_image)
         btn_layout.addWidget(self.btn_accept)
         layout.addLayout(btn_layout)
         
         self.btn_clear.clicked.connect(self.canvas.clear)
+        self.btn_image.clicked.connect(self.select_image)
         self.btn_accept.clicked.connect(self.accept)
         
+    def select_image(self):
+        from PyQt6.QtWidgets import QFileDialog
+        filepath, _ = QFileDialog.getOpenFileName(self, "Select Signature Image", "", "Images (*.png *.jpg *.jpeg)")
+        if filepath:
+            self.selected_image_path = filepath
+            self.accept()
+        
     def get_signature_image_path(self):
+        if self.selected_image_path:
+            return self.selected_image_path
         tmp_path = "/tmp/signature_temp.png"
         self.canvas.image.save(tmp_path)
         return tmp_path

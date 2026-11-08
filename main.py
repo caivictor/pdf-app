@@ -73,12 +73,19 @@ class MainWindow(QMainWindow):
             self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
             
 
+
     def print_pdf(self):
         if not self.viewer.doc:
             QMessageBox.warning(self, "Warning", "Please open a PDF first.")
             return
 
+        from PyQt6.QtPrintSupport import QPrinterInfo
+        if not QPrinterInfo.availablePrinters():
+            QMessageBox.warning(self, "Warning", "No system printers found.")
+            return
+
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+
         dialog = QPrintDialog(printer, self)
         
         if dialog.exec() == QDialog.DialogCode.Accepted:
@@ -90,7 +97,7 @@ class MainWindow(QMainWindow):
                     printer.newPage()
                 
                 # Render page
-                pixmap = self.viewer.render_page(i)
+                pixmap = self.viewer.render_page_for_print(i, dpi=300)
                 if pixmap:
                     image = pixmap.toImage()
                     
@@ -112,7 +119,16 @@ class MainWindow(QMainWindow):
             x = event.position().x()
             y = event.position().y()
             
+            # Adjust for center alignment
+            pixmap = self.canvas.pixmap()
+            if pixmap:
+                offset_x = (self.canvas.width() - pixmap.width()) / 2.0
+                offset_y = (self.canvas.height() - pixmap.height()) / 2.0
+                x -= offset_x
+                y -= offset_y
+            
             try:
+                self.viewer.close_document()
                 insert_signature_image(self.viewer.file_path, self.pending_signature_path, self.viewer.current_page, (x, y))
                 self.viewer.load_document(self.viewer.file_path)
                 self.viewer.current_page = self.viewer.current_page # keep same page
