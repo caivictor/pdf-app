@@ -2,7 +2,6 @@
 
 A robust, Wayland-compatible Python desktop application for viewing, signing, merging, and saving PDF documents, built with PyQt6 and PyMuPDF (`fitz`).
 
-![App Screenshot](./assets/screenshot.png)
 
 ## Features
 
