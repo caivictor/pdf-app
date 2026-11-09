@@ -10,11 +10,12 @@ from merge_dialog import MergeDialog
 from signature_dialog import SignatureDialog, insert_signature_image
 from PyQt6.QtGui import QCursor, QPainter
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
+from version import __version__
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PDF Application")
+        self.setWindowTitle(f"PDF Application v{__version__}")
         self.resize(800, 600)
         self.viewer = PDFViewer()
 
