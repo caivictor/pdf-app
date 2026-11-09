@@ -1,0 +1,39 @@
+name: PR Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Check version bump
+        run: |
+          # Get base version
+          git checkout origin/${{ github.base_ref }} -- version.py
+          BASE_VERSION=$(python -c "import version; print(version.__version__)")
+          
+          # Get PR version
+          git checkout ${{ github.sha }} -- version.py
+          PR_VERSION=$(python -c "import version; print(version.__version__)")
+          
+          echo "Base Version: $BASE_VERSION"
+          echo "PR Version: $PR_VERSION"
+          
+          if [ "$BASE_VERSION" = "$PR_VERSION" ]; then
+            echo "::error::Version must be incremented in version.py for this PR!"
+            exit 1
+          fi
+          echo "Version successfully incremented from $BASE_VERSION to $PR_VERSION."
